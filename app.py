@@ -1,11 +1,30 @@
 from flask import Flask, request, render_template, jsonify
 import requests
 import os
+from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+from extensions import db
+from models import User
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
 # Load API key from environment
 API_KEY = os.getenv('API_KEY')
+db_url = os.getenv('DB_URL')
+print(db_url)
+print(API_KEY)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize the database with the Flask app
+db.init_app(app)
+
+# Create the database tables
+with app.app_context():
+    db.create_all()
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
