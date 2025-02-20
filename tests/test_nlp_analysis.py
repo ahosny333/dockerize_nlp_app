@@ -1,81 +1,78 @@
 import pytest
-from app import app
+import json
+from flask import url_for
+from flask_login import login_user
 from unittest.mock import patch
-
+from models import User  # Import User model from your app
+import requests
 
 @pytest.fixture
-def client():
-    app.config['TESTING'] = True
-    with app.test_client() as client:
-        yield client
+def test_client():
+    from app import app  # Import your Flask app
+    app.config["TESTING"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
+    client = app.test_client()
+    return client
 
-def test_get_index(client,mocker):
-    """Test the home page (GET request)."""
-    response = client.get('/')
+@pytest.fixture
+def logged_in_user(test_client):
+    from app import app
+    with app.app_context():  # Ensure the application context is active
+        user = User(id=1, username="testuser")  # Create a mock user
+        
+        with test_client:  # Ensure test_client has a request context
+            test_client.get("/")  # Create an active request context
+            login_user(user)  # Now Flask-Login has a request context
+            
+            with test_client.session_transaction() as session:
+                session["_user_id"] = str(user.id)  # Mock session login
+            
+        return user
+
+
+@patch("requests.get")  # Mock article fetching
+@patch("requests.post")  # Mock Hugging Face API request
+def test_sentiment_analysis_success(mock_post, mock_get, test_client, logged_in_user):
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.text = "This is a test article. It is positive!"
+    
+    mock_post.return_value.status_code = 200
+    mock_post.return_value.json.return_value = [{
+        "label": "POSITIVE", "score": 0.95
+    }]
+    mock_post.return_value.json.return_value = [[{"label":"NEGATIVE","score":0.05},{"label":"POSITIVE","score":0.95}]]
+    response = test_client.post("/", data={"url": "http://example.com"}, follow_redirects=True)
+    
     assert response.status_code == 200
-    assert b"Enter Article URL" in response.data
+    data = json.loads(response.data)
+    assert "positive_score" in data
+    assert data["positive_score"] == 0.95
 
-def test_post_missing_url(client):
-    """Test POST request with missing URL."""
-    response = client.post('/')
-    assert response.status_code == 400
-    assert response.json == {"error": "URL is required"}
-
-def test_post_api_failure(client, mocker):
-    """Test POST request when MeaningCloud API fails."""
-    # Mock the requests.post call
-    mock_response = mocker.Mock()
-    mock_response.status_code = 500
-
-    mocker.patch('requests.post', return_value=mock_response)
-
-    response = client.post('/', data={'url': 'https://example.com/article'})
+@patch("requests.get")
+def test_sentiment_analysis_invalid_url(mock_get, test_client, logged_in_user):
+    mock_get.side_effect = requests.RequestException("Failed to fetch article")
+    
+    response = test_client.post("/", data={"url": "http://invalid-url.com"})
+    
     assert response.status_code == 500
-    assert response.json == {"error": "Failed to contact MeaningCloud API"}
+    data = json.loads(response.data)
+    assert "error" in data
+    assert "Failed to fetch the article" in data["error"]
 
-def test_post_valid_response(client, mocker):
-    """Test POST request with a valid response from MeaningCloud API."""
-    # Mock the requests.post call
-    mock_response = mocker.Mock()
-    mock_response.json.return_value = {
-        "score_tag": "P+",
-        "agreement": "AGREEMENT",
-        "subjectivity": "OBJECTIVE",
-        "confidence": "100",
-        "irony": "NONIRONIC"
-    }
-    mock_response.status_code = 200  # Ensure the mock response has a valid status_code
+@patch("requests.post")
+def test_sentiment_analysis_huggingface_failure(mock_post, test_client, logged_in_user):
+    mock_post.return_value.status_code = 500
+    
+    response = test_client.post("/", data={"url": "http://example.com"})
+    
+    assert response.status_code == 500
+    data = json.loads(response.data)
+    assert "error" in data
+    assert "Failed to contact Hugging Face API" in data["error"]
 
-    mocker.patch('requests.post', return_value=mock_response)
 
-    response = client.post('/', data={'url': 'https://example.com/article'})
-
-    assert response.status_code == 200
-    assert response.json == {
-        "score_tag": "P+",
-        "agreement": "AGREEMENT",
-        "subjectivity": "OBJECTIVE",
-        "confidence": "100",
-        "irony": "NONIRONIC"
-    }
-
-def test_post_partial_response(client,mocker):
-    """Test POST request with a partial response from MeaningCloud API."""
-    # Mock a partial API response
-    mock_response = mocker.Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "agreement": "DISAGREEMENT",
-        "confidence": "80"
-    }
-    mocker.patch('requests.post', return_value=mock_response)
-
-    response = client.post('/', data={'url': 'https://example.com/article'})
-    assert response.status_code == 200
-    assert response.json == {
-        "score_tag": "NONE",  # Default value
-        "agreement": "DISAGREEMENT",
-        "subjectivity": "UNKNOWN",  # Default value
-        "confidence": "80",
-        "irony": "UNKNOWN"  # Default value
-    }
+def test_sentiment_analysis_unauthenticated(test_client):
+    response = test_client.post("/", data={"url": "http://example.com"}, follow_redirects=True)
+    
+    assert response.status_code == 200  # Redirects to login
+    assert b"Login" in response.data  # Ensure login page is shown

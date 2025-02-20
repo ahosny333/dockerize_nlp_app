@@ -51,25 +51,57 @@ def index():
         if not url:
             return jsonify({"error": "URL is required"}), 400
 
-        # Call the MeaningCloud API
-        response = requests.post(
-            'https://api.meaningcloud.com/sentiment-2.1',
-            data={'key': API_KEY, 'url': url, 'lang': 'en'}
-        )
+        # Fetch the article content from the URL
+        try:
+            article_response = requests.get(url)
+            article_response.raise_for_status()
+            article_text = article_response.text
+        except requests.RequestException as e:
+            return jsonify({"error": f"Failed to fetch the article: {e}"}), 500
 
+        # Call Hugging Face Inference API for sentiment analysis
+        api_url = "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"
+        headers = {"Authorization": f"Bearer {API_KEY}"}
+        payload = {"inputs": article_text,
+		  "options": {"truncation": True}
+		  }
+        max_characters = 1300  # Adjust this value as needed
+        if len(article_text) > max_characters:
+            article_text = article_text[:max_characters]
+            payload["inputs"] = article_text
+        
+        response = requests.post(api_url, headers=headers, json=payload)
+        print(response.status_code)
+        print(response.text)
         if response.status_code != 200:
-            return jsonify({"error": "Failed to contact MeaningCloud API"}), 500
+            return jsonify({"error": "Failed to contact Hugging Face API", "status": response.status_code}), 500
 
         api_response = response.json()
-        # print(api_response)
-        # Extract meaningful fields
-        result = {
-            "score_tag": api_response.get("score_tag", "NONE"),
-            "agreement": api_response.get("agreement", "UNKNOWN"),
-            "subjectivity": api_response.get("subjectivity", "UNKNOWN"),
-            "confidence": api_response.get("confidence", 0),
-            "irony": api_response.get("irony", "UNKNOWN"),
-        }
+
+        # Process the API response. Typically, the response is a list with one dict.
+        if isinstance(api_response, list) and len(api_response) > 0:
+            predictions = api_response[0]  # Extract the inner list for a single input
+            # You can then decide how to use these predictions:
+            negative = next((p for p in predictions if p["label"] == "NEGATIVE"), {})
+            positive = next((p for p in predictions if p["label"] == "POSITIVE"), {})
+            # For example:
+            result = {
+            "negative_score": negative.get("score", 0),
+            "positive_score": positive.get("score", 0)
+            }
+        else:
+            sentiment_result = {}
+            result = {
+            "negative_score": negative.get("score", 0),
+            "positive_score": positive.get("score", 0)
+            }
+
+
+        # Build result similar to your MeaningCloud output if needed.
+        #result = {
+        #    "label": sentiment_result.get("label", "UNKNOWN"),
+        #    "score": sentiment_result.get("score", 0)
+        #}
 
         return jsonify(result)
     return render_template('index.html')
