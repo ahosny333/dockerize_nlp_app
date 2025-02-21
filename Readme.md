@@ -3,6 +3,24 @@
 ## Table of Contents
 
 1. [1. Project Planning & Management](#1-project-planning--management)
+   1.1 [Project Proposal](#project-proposal)
+   1.2 [Project Plan](#project-plan)  
+   1.3 [Task Assignment & Roles](#task-assignment--roles)  
+   1.4 [Risk Assessment & Mitigation](#risk-assessment--mitigation)  
+   1.5 [KPIs (Key Performance Indicators)](#kpis-key-performance-indicators)  
+
+2. [2. Literature Review](#2-literature-review)  
+   2.1 [Feedback & Evaluation](#feedback--evaluation)  
+   2.2 [Suggested Improvements](#suggested-improvements)  
+   2.3 [Final Grading Criteria](#final-grading-criteria)  
+
+3. [3. Requirements Gathering](#3-requirements-gathering)  
+   3.1 [Stakeholder Analysis](#stakeholder-analysis)  
+   3.2 [User Stories & Use Cases](#user-stories--use-cases)  
+   3.3 [Functional Requirements](#functional-requirements)  
+   3.4 [Non-Functional Requirements](#non-functional-requirements)  
+
+4. [4. System Analysis & Design](#4-system-analysis--design)
 
 ## 1. Project Planning & Management
 
