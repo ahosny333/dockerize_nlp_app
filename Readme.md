@@ -21,6 +21,30 @@
    3.4 [Non-Functional Requirements](#non-functional-requirements)  
 
 4. [System Analysis & Design](#4-system-analysis--design)
+   4.1 [Problem Statement & Objectives](#1-problem-statement--objectives)  
+   4.2 [Use Case Diagram & Descriptions](#use-case-diagram--descriptions)  
+   4.3 [Software Architecture](#software-architecture)  
+   4.4 [Database Design & Data Modeling](#2-database-design--data-modeling)  
+      4.4.1 [ER Diagram](#er-diagram)  
+      4.4.2 [Logical Schema](#logical-schema)  
+      4.4.3 [Physical Schema](#physical-schema)
+   4.5 [Data Flow & System Behavior](#3-data-flow--system-behavior)  
+      4.5.1 [DFD (Data Flow Diagram)](#dfd-context-level)  
+      4.5.2 [Sequence Diagrams](#sequence-diagram)  
+      4.5.3 [Activity Diagram](#activity-diagram)  
+      4.5.4 [State Diagram](#state-diagram)  
+      4.5.5 [Class Diagram](#class-diagram)  
+   4.6 [UI/UX Design & Prototyping](#4-uiux-design--prototyping)  
+      4.6.1 [Wireframes & Mockups](#wireframes)  
+      4.6.2 [UI/UX Guidelines](#uiux-guidelines)  
+   4.7 [System Deployment & Integration](#5-system-deployment--integration)  
+      4.7.1 [Technology Stack](#technology-stack)  
+      4.7.2 [Deployment Diagram](#deployment-diagram)  
+      4.7.3 [Component Diagram](#component-diagram)  
+   4.8 [Additional Deliverables](#6-additional-deliverables)  
+      4.8.1 [API Documentation](#api-documentation)  
+      4.8.2 [Testing & Validation](#testing--validation)  
+      4.8.3 [Deployment Strategy](#deployment-strategy)  
 
 ---
 
@@ -270,3 +294,163 @@ These requirements focus on delivering a ***minimum viable product (MVP)*** that
 ---
 
 ## 4. System Analysis & Design
+
+### **1. Problem Statement & Objectives**  
+
+**Problem Statement:**  
+Manual evaluation of articles for quality, sentiment, and readability is time-consuming and subjective. Developers also struggle with deploying NLP models consistently across environments.  
+
+**Objectives:**  
+
+- Automate article evaluation using NLP (sentiment, readability).  
+- Ensure reproducibility and scalability via Docker and CI/CD pipelines.  
+- Deliver a user-friendly interface for seamless interaction.  
+
+---
+
+#### **Use Case Diagram & Descriptions**  
+
+**Actors:**  
+
+- **User** (submit articles, view results).  
+- **Developer** (deploy, maintain the system).  
+- **System** (process articles, generate evaluations).  
+
+**Key Use Cases:**  
+
+1. **Submit Article:** User uploads text → System processes it → Returns evaluation.  
+2. **Deploy System:** Developer runs Docker → System launches API/UI.  
+3. **Monitor Performance:** System logs metrics → Developer reviews.  
+
+---
+
+#### **Software Architecture**  
+
+**High-Level Design:**  
+
+- **Microservices Architecture** (decoupled components for NLP, API, and UI).  
+- **Components:**  
+  1. **NLP Engine:** Python-based model (spaCy/NLTK) for text analysis.  
+  2. **API Layer:** FastAPI endpoints for article submission and result retrieval.  
+  3. **UI Layer:** Streamlit app for non-technical users.  
+  4. **DevOps Layer:** Docker containers, GitHub Actions CI/CD.  
+
+**Architecture Style:**  
+
+- **Containerized Microservices** (Docker) + **Client-Server** (API/UI).  
+
+---
+
+### **2. Database Design & Data Modeling**  
+
+#### **ER Diagram**  
+
+- **Entities:**  
+  - `Article` (ID, Content, Evaluation_Results, Timestamp).  
+  - `User` (ID, API_Key, Request_History).  
+- **Relationships:**  
+  - One `User` can submit many `Articles`.  
+
+#### **Logical Schema**  
+
+- **Tables:**  
+
+  ```sql
+  Articles (ArticleID PK, UserID FK, Content TEXT, SentimentScore FLOAT, ReadabilityScore FLOAT)
+  Users (UserID PK, APIKey VARCHAR, LastLogin TIMESTAMP)
+  ```  
+
+#### **Physical Schema**  
+
+- **Database:** PostgreSQL (containerized via Docker).  
+- **Normalization:** 3NF to avoid redundancy (e.g., separate `Users` and `Articles`).  
+
+---
+
+### **3. Data Flow & System Behavior**  
+
+#### **DFD (Context Level)**  
+
+1. **User** → **Submit Article** → **System**.  
+2. **System** → **Process NLP** → **Generate Report** → **User**.  
+
+#### **Sequence Diagram**  
+
+1. **User** → **API**: Submit article.  
+2. **API** → **NLP Engine**: Analyze text.  
+3. **NLP Engine** → **API**: Return scores.  
+4. **API** → **User**: Display results.  
+
+#### **Activity Diagram**  
+
+- **Workflow:** User submits article → System validates input → NLP processing → Results displayed.  
+
+#### **State Diagram**  
+
+- **Article States:** `Submitted` → `Processing` → `Evaluated` → `Archived`.  
+
+#### **Class Diagram**  
+
+- **Classes:**  
+  - `NLPModel` (methods: `analyze_sentiment()`, `calculate_readability()`).  
+  - `APIController` (methods: `handle_request()`, `send_response()`).  
+  - `DockerManager` (methods: `build_image()`, `deploy_container()`).  
+
+---
+
+### **4. UI/UX Design & Prototyping**  
+
+#### **Wireframes**  
+
+- **Homepage:** Text input box + "Analyze" button.  
+- **Results Page:** Table showing sentiment, readability, and summary.  
+
+#### **UI/UX Guidelines**  
+
+- **Simplicity:** Minimalist design with focus on functionality.  
+- **Accessibility:** High-contrast colors, readable fonts (e.g., Roboto).  
+- **Responsiveness:** Works on desktop and mobile.  
+
+---
+
+### **5. System Deployment & Integration**  
+
+#### **Technology Stack**  
+
+- **Backend:** Python, FastAPI, spaCy.  
+- **Frontend:** html.  
+- **Database:** PostgreSQL.  
+- **DevOps:** Docker, GitHub Actions.  
+
+#### **Deployment Diagram**  
+
+- **Local:** Docker running on a single machine.  
+- **Cloud (Future):** AWS ECS/Kubernetes for scaling.  
+
+#### **Component Diagram**  
+
+- **Components:** NLP Engine ↔ API ↔ UI ↔ Docker Containers.  
+
+---
+
+### **6. Additional Deliverables**  
+
+#### **API Documentation**  
+
+- Endpoints:  
+  - `POST /evaluate`: Submit article text.  
+  - `GET /results/{id}`: Retrieve evaluation.  
+- Example usage in the repo’s [README](https://github.com/ahosny333/dockerize_nlp_app/tree/moon).  
+
+#### **Testing & Validation**  
+
+- **Unit Tests:** Validate NLP functions (e.g., `test_sentiment_analysis()`).  
+- **Integration Tests:** Docker build + API response checks.  
+- **UAT Plan:** Beta testers evaluate usability and accuracy.  
+
+#### **Deployment Strategy**  
+
+- **Hosting:** Local Docker for MVP; cloud (AWS) for production.  
+- **Scaling:** Auto-scaling via Kubernetes (future).  
+
+---
