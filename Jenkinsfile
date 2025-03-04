@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     // Reference Jenkins credentials stored with ID "dockerhub-credentials-id"
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials-id')
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub')
     IMAGE_NAME = "flask-sentiment"
     BUILD_TAG = "${env.BUILD_NUMBER}"
   }
