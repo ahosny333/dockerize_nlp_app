@@ -25,11 +25,11 @@ pipeline {
         // Spin up the test environment
         // sh 'docker-compose up -d'
         // up database for test
-        sh 'docker-compose up -d db
+        sh 'docker compose up -d db'
         // Run tests in the appropriate container (assuming it's named "web")
-        sh 'docker-compose run --rm web pytest'
+        sh 'docker compose run --rm flask_app pytest'
         // Tear down the test environment
-        sh 'docker-compose down'
+        sh 'docker compose down'
       }
     }
     
