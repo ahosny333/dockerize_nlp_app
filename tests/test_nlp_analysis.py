@@ -44,6 +44,8 @@ def test_sentiment_analysis_success(mock_post, mock_get, test_client, logged_in_
     response = test_client.post("/", data={"url": "http://example.com"}, follow_redirects=True)
     
     assert response.status_code == 200
+    print("heeeeeeeer")
+    print(response.data)
     data = json.loads(response.data)
     assert "positive_score" in data
     assert data["positive_score"] == 0.95
