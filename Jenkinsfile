@@ -9,6 +9,13 @@ pipeline {
   }
 
   stages {
+    stage('Prepare Environment') {
+      steps {
+        withCredentials([file(credentialsId: 'my_env_id', variable: 'ENV_FILE')]) {
+          sh 'cp $ENV_FILE .env'
+        }
+      }
+    }
     
     stage('Build Docker Image') {
       steps {
