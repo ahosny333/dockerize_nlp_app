@@ -32,8 +32,11 @@ def logged_in_user(test_client):
             with client.session_transaction() as session:
                 session["_user_id"] = str(user.id)
                 session["_fresh"] = True  # Optional: mark session as fresh
-            # Debug: print cookies to confirm session cookie is set
-            print("Cookies after login simulation:", client.cookie_jar)
+            # Debug: attempt to print cookies if available
+            try:
+                print("Cookies after login simulation:", client.cookie_jar)
+            except AttributeError:
+                print("Client does not support cookie_jar attribute.")
         return user
 
 @patch("requests.get")  # Mock article fetching
