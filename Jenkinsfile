@@ -65,6 +65,11 @@ pipeline {
   }
   
   post {
+   always {
+      sh 'docker compose down'
+      sh 'rm -f .env'
+      
+    }
     success {
       echo 'Pipeline completed successfully!'
       // Add notification steps (e.g., send Slack or email notifications)

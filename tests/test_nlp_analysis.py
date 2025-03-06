@@ -11,11 +11,14 @@ def test_client():
     from app import app  # Import your Flask app
     app.config["TESTING"] = True
     app.config["WTF_CSRF_ENABLED"] = False
+    print(app.config['SECRET_KEY'])
+    print("tesssssssssssting")
     client = app.test_client()
     return client
 
 @pytest.fixture
 def logged_in_user(test_client):
+    print("tesssssssssssting2222222")
     from app import app
     with app.app_context():  # Ensure the application context is active
         user = User(id=1, username="testuser")  # Create a mock user
@@ -33,6 +36,7 @@ def logged_in_user(test_client):
 @patch("requests.get")  # Mock article fetching
 @patch("requests.post")  # Mock Hugging Face API request
 def test_sentiment_analysis_success(mock_post, mock_get, test_client, logged_in_user):
+    print("tesssssssssssting2222222")
     mock_get.return_value.status_code = 200
     mock_get.return_value.text = "This is a test article. It is positive!"
     

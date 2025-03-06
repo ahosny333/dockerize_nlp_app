@@ -2,14 +2,14 @@ from flask import Flask, request, render_template, jsonify,url_for, flash,redire
 import requests
 import os
 from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from extensions import db
 from models import User
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(find_dotenv())
 
 app = Flask(__name__)
 
