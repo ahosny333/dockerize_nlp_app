@@ -4,7 +4,7 @@ pipeline {
   environment {
     // Reference Jenkins credentials stored with ID "dockerhub-credentials-id"
     DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-    //IMAGE_NAME = "flask-sentiment"
+    MY_IMAGE_NAME = credentials('IMAGE_NAME_ID')
     BUILD_TAG = "${env.BUILD_NUMBER}"
   }
 
@@ -23,7 +23,7 @@ pipeline {
         sh 'docker compose build'
         
         // Option 2: If you have a dedicated Dockerfile for the Flask app:
-        // sh "docker build -t ${IMAGE_NAME}:${BUILD_TAG} ."
+        // sh "docker build -t ${MY_IMAGE_NAME}:${BUILD_TAG} ."
       }
     }
     
@@ -47,10 +47,10 @@ pipeline {
           // Log in to Docker Hub using Jenkins credentials
           sh "docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW}"
           // Tag the image for latest and build-specific version
-          // sh "docker tag ${IMAGE_NAME}:${BUILD_TAG} ${IMAGE_NAME}:latest"
+          // sh "docker tag ${MY_IMAGE_NAME}:${BUILD_TAG} ${MY_IMAGE_NAME}:latest"
           // Push both tags
-          // sh "docker push ${IMAGE_NAME}:latest"
-          sh "docker push ${IMAGE_NAME}:${BUILD_TAG}"
+          // sh "docker push ${MY_IMAGE_NAME}:latest"
+          sh "docker push ${MY_IMAGE_NAME}:${BUILD_TAG}"
         }
       }
     }
