@@ -1,0 +1,125 @@
+
+
+Description: This template deploys the servers
+
+Parameters:
+    id:
+        Description: unique id .
+        Type: String
+    EnvironmentName:
+        Description: This name will be prefixed to all the resources.
+        Type: String
+    ServerAMIId:
+        Description: AMI ID for EC2 instances.
+        Type: String
+        # Default: ami-06ce824c157700cd2
+        Default: ami-084568db4383264d4
+        # Default: ami-0283a57753b18025b
+    InstanceType:
+        Description: EC2 instance type
+        Type: String
+        Default: t2.micro
+    KeyPair:
+        Description: EC2 key pair
+        Type: String
+        # Default: smartzee_key
+        # Default: sql_key_pair
+        Default: hj2_aws
+
+Resources:
+    ## Security Groups ##
+
+    # Security group for app servers
+    WebServerSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Allow http to our hosts and SSH from local only
+            VpcId:
+                Fn::ImportValue: !Sub "${EnvironmentName}-VPCID"
+            SecurityGroupIngress: #Allowing inbound traffic on port 80 for accessing application and on port 22 for SSH in case of troubleshooting any issues.
+                - IpProtocol: tcp
+                  FromPort: 80
+                  ToPort: 80
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 22
+                  ToPort: 22
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 8000
+                  ToPort: 8000
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 1883
+                  ToPort: 1883
+                  CidrIp: 0.0.0.0/0
+                - IpProtocol: tcp
+                  FromPort: 443
+                  ToPort: 443
+                  CidrIp: 0.0.0.0/0
+            SecurityGroupEgress: # Allowing outbound traffic on all ports so that updates or patches can be downloaded.
+                - IpProtocol: tcp
+                  FromPort: 0
+                  ToPort: 65535
+                  CidrIp: 0.0.0.0/0
+
+
+
+    
+
+
+
+    Ec2Instance: 
+        Type: AWS::EC2::Instance
+        # CreationPolicy: 
+        #   ResourceSignal:
+        #     Timeout: PT8M # Specify the time here
+        Properties: 
+            UserData:
+                Fn::Base64: 
+                  !Sub |
+                    #!/bin/bash
+                    cd /home/ubuntu
+                    mkdir start_dir
+                    echo "apt-get update" 
+                    sudo apt-get update -y 
+                    sudo apt-get install -y build-essential python3-pip >> test.txt
+                    echo "====end update======" >> test.txt
+
+                    sudo pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz >> test.txt
+                    echo "====end install aws scripts======" >> test.txt
+                    sudo /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource Ec2Instance --region ${AWS::Region} >> test.txt
+                    echo "====end timeout finish======" >> test.txt
+
+                    
+
+            ImageId: !Ref ServerAMIId
+            InstanceType: !Ref InstanceType
+            # SecurityGroups:
+            #     - Ref: WebServerSecurityGroup
+            #IamInstanceProfile: !Ref InstanceProfile
+            KeyName: !Ref KeyPair
+            NetworkInterfaces: 
+              - AssociatePublicIpAddress: "true"
+                DeviceIndex: "0"
+                GroupSet: 
+                  - Ref: WebServerSecurityGroup
+                SubnetId: 
+                  Fn::ImportValue: !Sub "${EnvironmentName}-PublicSubnet1"
+            BlockDeviceMappings: 
+              - DeviceName: "/dev/sda1"
+                Ebs: 
+                    VolumeType: "gp2"
+                    VolumeSize: "8"
+            Tags:
+              - Key: Name
+                Value: !Sub "elgris-${id}"
+
+
+    
+Outputs: 
+    Ec2Instance: 
+      Description: A reference to the created EC2
+      Value: !Ref Ec2Instance
+      Export:
+        Name: !Sub ${id}-EC2
