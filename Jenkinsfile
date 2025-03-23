@@ -103,12 +103,17 @@ pipeline {
               --query "Reservations[*].Instances[*].PublicIpAddress" \
               --filters "Name=tag:Name,Values=elgris-12345678" \
               --output text)
+            # Optionally add remote host key to known_hosts
+            ssh-keyscan -H ${INSTANCE_IP} >> ~/.ssh/known_hosts
             echo "[ec2]" > inventory
             echo "${INSTANCE_IP} ansible_user=ubuntu" >> inventory
             cat inventory
           '''
           // Run the Ansible playbook using the generated inventory file and the SSH key
           sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY}"
+
+          // OR Run the Ansible playbook, disabling strict host key checking -- not used as i used add remote host key to known_hosts
+          // sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
         }
       }
     }
