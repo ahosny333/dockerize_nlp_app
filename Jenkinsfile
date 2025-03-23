@@ -62,6 +62,56 @@ pipeline {
         // Alternatively, you could invoke deployment scripts or orchestrate deployments via other tools
       }
     }
+
+    stage('build aws infrastructure'){
+      steps{
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'myaws',
+                                  accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                                  secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+                    // Deploy or update CloudFormation stack using AWS CLI
+                    sh """
+                      aws cloudformation deploy --template-file aws_infrastructure/network.yml --stack-name "nlp-network" \
+                        --parameter-overrides EnvironmentName=${aws_EnvironmentName} WorkflowID="12345678" \
+                        --tags project=${aws_project}
+
+                      aws cloudformation deploy --template-file aws_infrastructure/servers.yml --stack-name "nlp-server" \
+                        --parameter-overrides EnvironmentName=${aws_EnvironmentName} id="12345678" \
+                         --tags project=${aws_project}
+                         
+                    aws cloudformation list-exports --query "Exports[?Name==\\`WorkflowID\\`].Value" --no-paginate --output text
+                    """
+
+                    
+        }
+      }
+    }
+    
+    stage('Configure EC2 with Ansible') {
+      steps {
+        // Use Jenkins credentials for your SSH key
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                  credentialsId: 'myaws',
+                                  accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                                  secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],sshUserPrivateKey(credentialsId: 'ec2_ssh', keyFileVariable: 'SSH_KEY')]) {
+          // Create the inventory file using a shell script without needing extra Groovy code
+          sh '''
+            INSTANCE_IP=$(aws ec2 describe-instances \
+              --query "Reservations[*].Instances[*].PublicIpAddress" \
+              --filters "Name=tag:Name,Values=elgris-12345678" \
+              --output text)
+            echo "[ec2]" > inventory
+            echo "${INSTANCE_IP} ansible_user=ubuntu" >> inventory
+            cat inventory
+          '''
+          // Run the Ansible playbook using the generated inventory file and the SSH key
+          sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY}"
+        }
+      }
+    }
+
+
+
   }
   
   post {

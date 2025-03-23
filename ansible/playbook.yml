@@ -1,0 +1,10 @@
+---
+- name: Copy test file to remote EC2
+  hosts: ec2
+  become: yes
+  tasks:
+    - name: Copy test.txt to remote server
+      copy:
+        src: ../test.txt
+        dest: /home/ubuntu/test.txt
+        mode: '0777'
