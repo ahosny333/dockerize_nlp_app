@@ -6,6 +6,9 @@ pipeline {
     DOCKERHUB_CREDENTIALS = credentials('dockerhub')
     MY_IMAGE_NAME = credentials('IMAGE_NAME_ID')
     BUILD_TAG = "${env.BUILD_NUMBER}"
+    AWS_DEFAULT_REGION = 'us-east-1'
+    aws_EnvironmentName = 'nlp-app'
+    aws_project = 'nlp_project'
   }
 
   stages {
