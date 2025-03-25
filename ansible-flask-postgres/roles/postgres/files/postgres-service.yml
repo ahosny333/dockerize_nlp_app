@@ -1,0 +1,17 @@
+# This file is used by the main.yml file in the tasks directory to create the service for the postgres database in the kubernetes cluster.
+# The service is used to expose the postgres database to the flask application.
+# The service is created with the ClusterIP type which exposes the service on a cluster-internal IP.
+# The service is exposed on port 5432 which is the default port for postgres database.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  type: ClusterIP # Expose the service on a cluster-internal IP
+  selector:
+    app: postgres 
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

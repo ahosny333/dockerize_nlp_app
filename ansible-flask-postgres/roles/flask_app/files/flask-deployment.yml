@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+        - name: flask-app
+          image: "{{ FLASK_IMAGE }}"
+          ports:
+            - containerPort: 5000
+          env:
+          - name: DB_URL
+            value: "postgresql://ahmed:theDIYlifeco321#@db/mydatabase"
+          - name: FLASK_APP
+            value: "app.py"
+          - name: SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: SECRET_KEY
+          - name: API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: API_KEY
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"

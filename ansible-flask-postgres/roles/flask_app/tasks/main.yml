@@ -1,0 +1,47 @@
+---
+- name: Create Flask resources
+  block:
+    - name: Create Flask Deployment
+      command: "minikube kubectl -- apply -f {{role_path}}/files/flask-deployment.yml"
+      args:
+        executable: /bin/bash
+      async: 60 # Wait for 60 seconds
+      poll: 2 # Check every 2 seconds
+      register: deployment_result
+      environment:
+        FLASK_IMAGE: "{{ FLASK_IMAGE }}"
+      
+    - name: Wait for Deployment to be ready
+      command: "minikube kubectl -- wait --for=condition=available deployment/flask-app --timeout=120s"
+      args:
+        executable: /bin/bash
+      register: deploy_wait
+      retries: 5 # Retry 5 times
+      delay: 10 # Delay 10 seconds between retries
+      until: deploy_wait.rc == 0
+
+    - name: Create Flask Service
+      command: "minikube kubectl -- apply -f {{ role_path }}/files/flask-service.yml"
+      args:
+        executable: /bin/bash
+
+  rescue:
+    - name: Rollback Flask resources # Rollback in case of failure
+      block:
+        - name: Delete Flask Service
+          command: "minikube kubectl -- delete -f {{ role_path }}/files/flask-service.yml --ignore-not-found=true"
+          args:
+            executable: /bin/bash
+          ignore_errors: true       # Ignore errors if Service deletion fails
+
+        - name: Delete Flask Deployment # Delete Flask Deployment if Service deletion fails
+          command: "minikube kubectl -- delete -f {{ role_path }}/files/flask-deployment.yml --ignore-not-found=true"
+          args:
+            executable: /bin/bash
+          ignore_errors: true       # Ignore errors if Deployment deletion fails
+
+      ignore_errors: true           # Ignore errors in rollback
+
+    - name: Fail with rollback message
+      ansible.builtin.fail:
+        msg: "Flask deployment failed. Rollback completed."

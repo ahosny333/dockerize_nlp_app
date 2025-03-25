@@ -1,0 +1,16 @@
+# Description: This file contains the tasks to create the PostgreSQL resources.
+# The tasks are executed in the following order:
+# 1. Deploy PostgreSQL Deployment
+# 2. Create PostgreSQL Service
+# The tasks use the `minikube kubectl --` command to apply the YAML files that define the PostgreSQL resources.
+
+---
+- name: Deploy PostgreSQL
+  command: "minikube kubectl --  apply -f {{ role_path }}/files/postgres-deployment.yml"
+  args:
+    executable: /bin/bash
+
+- name: Create PostgreSQL Service
+  command: "minikube kubectl --  apply -f {{ role_path }}/files/postgres-service.yml"
+  args:
+    executable: /bin/bash

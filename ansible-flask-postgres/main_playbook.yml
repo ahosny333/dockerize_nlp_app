@@ -1,0 +1,62 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    FLASK_IMAGE: "my-flask-app:latest"  # Overridden in Jenkins
+    NAMESPACE: "default"                # Overridden in Jenkins
+
+  tasks:
+    - name: Load .env variables # Load environment variables from .env file
+      community.general.envfile:
+        path: .env
+        state: present
+
+    - name: Ensure Minikube is running
+      command: minikube status
+      register: minikube_status
+      changed_when: false
+      ignore_errors: true
+
+    - name: Start Minikube if not running
+      command: minikube start
+      when: minikube_status.rc != 0 # If Minikube is not running (rc = 0 means running) rc = return code 
+      # when: "'Running' not in minikube_status.stdout" # If Minikube is not running
+
+    # Create a Kubernetes secret with sensitive data (API_KEY, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, SECRET_KEY) using imperative command
+    - name: Create Kubernetes Secret
+      command: > 
+        minikube kubectl -- create secret generic app-secrets
+        --namespace={{ NAMESPACE }}
+        --from-literal=API_KEY={{ API_KEY }}
+        --from-literal=POSTGRES_USER={{ POSTGRES_USER }}
+        --from-literal=POSTGRES_PASSWORD={{ POSTGRES_PASSWORD }}
+        --from-literal=POSTGRES_DB={{ POSTGRES_DB }}
+        --from-literal=SECRET_KEY={{ secret_key }}
+      args:
+        executable: /bin/bash
+      register: secret_creation # Register the output for later use
+      changed_when: "'created' in secret_creation.stdout or 'configured' in secret_creation.stdout" # Check if secret is created
+
+    # - name: Ensure PostgreSQL is installed
+    #   apt:
+    #     name: postgresql
+    #     state: present
+
+    # - name: Ensure Flask is installed
+    #   pip:
+    #     name: Flask
+    #     state: present
+
+  roles:
+    - postgres
+    - flask_app
+
+  # flask-service_post_tasks: # Post tasks for Flask service deployment (after roles) 
+  #   - name: Get Flask service URL
+  #     command: minikube service flask-service --url
+  #     register: flask_url
+  #     changed_when: false
+
+  #   - debug:
+  #       var: flask_url.stdout
