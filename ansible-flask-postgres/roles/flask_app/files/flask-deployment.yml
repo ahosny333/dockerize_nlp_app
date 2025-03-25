@@ -1,3 +1,6 @@
+# This file is used to create a deployment for the flask app
+# The deployment is created with a single replica and the container image is passed as an environment variable
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -19,9 +22,15 @@ spec:
             - containerPort: 5000
           env:
           - name: DB_URL
-            value: "postgresql://ahmed:theDIYlifeco321#@db/mydatabase"
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: DB_URL
           - name: FLASK_APP
-            value: "app.py"
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: FLASK_APP
           - name: SECRET_KEY
             valueFrom:
               secretKeyRef:

@@ -24,6 +24,7 @@
       # when: "'Running' not in minikube_status.stdout" # If Minikube is not running
 
     # Create a Kubernetes secret with sensitive data (API_KEY, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, SECRET_KEY) using imperative command
+    # The data is stored in the .env file and passed as environment variables to the secret
     - name: Create Kubernetes Secret
       command: > 
         minikube kubectl -- create secret generic app-secrets
@@ -32,7 +33,9 @@
         --from-literal=POSTGRES_USER={{ POSTGRES_USER }}
         --from-literal=POSTGRES_PASSWORD={{ POSTGRES_PASSWORD }}
         --from-literal=POSTGRES_DB={{ POSTGRES_DB }}
+        --from-literal=DB_URL=postgresql://{{ POSTGRES_USER }}:{{ POSTGRES_PASSWORD }}@db/{{ POSTGRES_DB }}
         --from-literal=SECRET_KEY={{ secret_key }}
+        --from-literal=FLASK_APP={{ FLASK_APP }}
       args:
         executable: /bin/bash
       register: secret_creation # Register the output for later use
