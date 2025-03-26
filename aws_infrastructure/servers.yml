@@ -24,7 +24,7 @@ Parameters:
         Type: String
         # Default: smartzee_key
         # Default: sql_key_pair
-        Default: hj2_aws
+        Default: diy_email
 
 Resources:
     ## Security Groups ##
@@ -81,22 +81,11 @@ Resources:
                     #!/bin/bash
                     cd /home/ubuntu
                     mkdir start_dir
+                    mkdir start_dir2
                     echo "apt-get update" 
                     sudo apt-get update -y 
                     sudo apt-get install -y build-essential python3-pip >> test.txt
-                    
-                    sudo apt-get install ca-certificates curl
-                    sudo install -m 0755 -d /etc/apt/keyrings
-                    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-                    sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-                    # Add the repository to Apt sources:
-                    echo \
-                    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-                    $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-                    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-                    sudo apt-get update
-                    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
                     echo "====end update======" >> test.txt
 
                     sudo pip install --break-system-packages https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz >> test.txt
