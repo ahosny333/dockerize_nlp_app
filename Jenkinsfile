@@ -111,7 +111,8 @@ pipeline {
           '''
           // update .env file including all required parameters 
           sh '''
-            echo "IMAGE_NAME=${MY_IMAGE_NAME}" >> .env
+            chmod u+w .env 
+            //echo "IMAGE_NAME=${MY_IMAGE_NAME}" >> .env
             echo "BUILD_TAG=${BUILD_TAG}" >> .env
             tar -czvf project.tar.gz migrations templates Dockerfile app.py docker-compose.yml extensions.py models.py requirements.txt .env
             
