@@ -5,7 +5,7 @@
   tasks:
     - name: Copy project to remote server
       copy:
-        src: project.tar.gz
+        src: ../project.tar.gz
         dest: /home/ubuntu/
         mode: '0777'
 
