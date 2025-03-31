@@ -9,8 +9,7 @@
         dest: /home/ubuntu/
         mode: '0777'
 
-- name: "Untar project folder"
-  become: true
-  shell: |
-    cd /home/ubuntu/
-    tar -xzvf project.tar.gz
+    - name: "Untar project folder"
+      shell: |
+        cd /home/ubuntu/
+        tar -xzvf project.tar.gz
