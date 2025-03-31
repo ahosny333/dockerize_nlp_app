@@ -114,7 +114,7 @@ pipeline {
 
           // OR Run the Ansible playbook, disabling strict host key checking -- not used as i used add remote host key to known_hosts
           // sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
-          sh "ansible-playbook -i inventory ansible/install_docker.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
+          // sh "ansible-playbook -i inventory ansible/install_docker.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
           //ansible-playbook -i inventory ansible/install_docker.yml --private-key ${SSH_KEY} 
         }
       }
