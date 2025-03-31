@@ -3,8 +3,14 @@
   hosts: ec2
   become: yes
   tasks:
-    - name: Copy test.txt to remote server
+    - name: Copy project to remote server
       copy:
-        src: ../test3.txt
-        dest: /home/ubuntu/test.txt
+        src: project.tar.gz
+        dest: /home/ubuntu/
         mode: '0777'
+
+- name: "Untar project folder"
+  become: true
+  shell: |
+    cd /home/ubuntu/
+    tar -xzvf project.tar.gz

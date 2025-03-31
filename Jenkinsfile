@@ -109,6 +109,13 @@ pipeline {
             echo "${INSTANCE_IP} ansible_user=ubuntu" >> inventory
             cat inventory
           '''
+          // update .env file including all required parameters 
+          sh '''
+            echo "IMAGE_NAME=${MY_IMAGE_NAME}" >> .env
+            echo "BUILD_TAG=${BUILD_TAG}" >> .env
+            tar -czvf project.tar.gz migrations templates Dockerfile app.py docker-compose.yml extensions.py models.py requirements.txt .env
+            
+          '''
           // Run the Ansible playbook using the generated inventory file and the SSH key
           sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY}"
 
