@@ -2,7 +2,6 @@ pipeline {
   agent any
 
   environment {
-    // Reference Jenkins credentials stored with ID "dockerhub-credentials-id"
     DOCKERHUB_CREDENTIALS = credentials('dockerhub')
     MY_IMAGE_NAME = credentials('IMAGE_NAME_ID')
     BUILD_TAG = "${env.BUILD_NUMBER}"
@@ -24,20 +23,15 @@ pipeline {
       steps {
         
         sh 'docker compose build'
-        
-        // Option 2: If you have a dedicated Dockerfile for the Flask app:
         // sh "docker build -t ${MY_IMAGE_NAME}:${BUILD_TAG} ."
       }
     }
     
     stage('Test') {
       steps {
-        // Spin up the test environment
-        // sh 'docker-compose up -d'
-        // up database for test
         sh 'docker compose up -d db'
         sh 'sleep 20'
-        // Run tests in the appropriate container (assuming it's named "web")
+        // Run tests in the appropriate container 
         sh 'docker compose run --rm flask_app pytest'
         // Tear down the test environment
         sh 'docker compose down'
@@ -51,8 +45,6 @@ pipeline {
           sh "docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW}"
           // Tag the image for latest and build-specific version
           // sh "docker tag ${MY_IMAGE_NAME}:${BUILD_TAG} ${MY_IMAGE_NAME}:latest"
-          // Push both tags
-          // sh "docker push ${MY_IMAGE_NAME}:latest"
           sh "docker push ${MY_IMAGE_NAME}:${BUILD_TAG}"
         }
       }
@@ -62,7 +54,6 @@ pipeline {
       steps {
         // Deploy using a production Docker Compose file
         sh 'docker compose up -d'
-        // Alternatively, you could invoke deployment scripts or orchestrate deployments via other tools
       }
     }
 
@@ -121,8 +112,7 @@ pipeline {
 
           // OR Run the Ansible playbook, disabling strict host key checking -- not used as i used add remote host key to known_hosts
           // sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
-          // sh "ansible-playbook -i inventory ansible/install_docker.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
-          //ansible-playbook -i inventory ansible/install_docker.yml --private-key ${SSH_KEY} 
+           
         }
       }
     }
