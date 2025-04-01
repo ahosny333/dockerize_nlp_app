@@ -1,4 +1,3 @@
----
 - name: Copy test file to remote EC2
   hosts: ec2
   become: yes
@@ -13,3 +12,24 @@
       shell: |
         cd /home/ubuntu/
         tar -xzvf project.tar.gz
+
+    - name: Tear down existing services
+      community.docker.docker_compose_v2:
+        project_src: /home/ubuntu/
+        state: absent
+
+    - name: Create and start services
+      community.docker.docker_compose_v2:
+        project_src: /home/ubuntu/
+      register: output
+
+    - name: Verify that web and db services are running
+      ansible.builtin.assert:
+        that:
+          - web_container.State == 'running'
+          - db_container.State == 'running'
+      vars:
+        web_container: >-
+          {{ output.containers | selectattr("Service", "equalto", "flask_app") | first }}
+        db_container: >-
+          {{ output.containers | selectattr("Service", "equalto", "db") | first }}
