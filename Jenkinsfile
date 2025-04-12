@@ -48,6 +48,7 @@ pipeline {
                 chmod u+w .env 
                 echo "BUILD_TAG=${BUILD_TAG}" >> .env
                 echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
+                echo "test_image=${BUILD_TAG}" >> .env
           '''
           sh "ansible-playbook -i local_inventory ansible/kubernetes.yml"
           // Tag the image for latest and build-specific version

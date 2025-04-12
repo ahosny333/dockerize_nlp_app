@@ -18,7 +18,7 @@ spec:
       - name: my-dockerhub-secret
       containers:
       - name: flask-app
-        image: ${BUILD_TAG}:${IMAGE_NAME}
+        image: ${BUILD_TAG}:${test_image}
         ports:
         - containerPort: 5000
         envFrom:
