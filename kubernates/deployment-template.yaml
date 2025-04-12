@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-deployment
+  labels:
+    app: flask
+spec:
+  selector:
+    matchLabels:
+      app: flask
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: flask
+    spec:
+      imagePullSecrets:
+      - name: my-dockerhub-secret
+      containers:
+      - name: flask-app
+        image: ${docker_user}/${IMAGE_NAME}:${BUILD_TAG}
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - secretRef:
+            name: my-secret
+        env :
+        - name : DB_URL
+          value : postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@db-service:5432/$(POSTGRES_DB)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-service
+spec:
+  selector:
+    app: flask
+  type : LoadBalancer
+  ports:
+  - protocol: TCP
+    port: 8081
+    targetPort: 5000
+    nodePort : 30003

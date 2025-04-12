@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgress-deployment
+  labels:
+    app: nlp
+spec:
+  selector:
+    matchLabels:
+      app: nlp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nlp
+    spec:
+      containers:
+      - name: postgress-db
+        image: postgres:15
+        ports:
+        - containerPort: 5432
+        env :
+        - name : POSTGRES_USER
+          valueFrom :
+            secretKeyRef:  # from secret component
+              name : my-secret  # name of secret component
+              key : POSTGRES_USER   # name of value in sceret
+        - name : POSTGRES_PASSWORD
+          valueFrom :
+            secretKeyRef:  # from secret component
+              name : my-secret  # name of secret component
+              key : POSTGRES_PASSWORD   # name of value in sceret
+        - name : POSTGRES_DB
+          valueFrom :
+            secretKeyRef:  # from secret component
+              name : my-secret  # name of secret component
+              key : POSTGRES_DB   # name of value in sceret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  selector:
+    app: nlp
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432

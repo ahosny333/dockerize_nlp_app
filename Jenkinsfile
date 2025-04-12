@@ -49,13 +49,40 @@ pipeline {
         }
       }
     }
-    
-    stage('Deploy') {
+
+    stage('deploy using kubeneates') {
       steps {
-        // Deploy using a production Docker Compose file
-        sh 'docker compose up -d'
+        script {
+            sh '''
+            chmod u+w .env 
+            echo "BUILD_TAG=${BUILD_TAG}" >> .env
+            echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
+            minikube start
+            alias k="minikube kubectl --"
+            k create secret generic my-secret --from-env-file=.env
+            k apply -f kubernates/db-deployment.yml
+            k create secret docker-registry my-dockerhub-secret \
+            --docker-username=${DOCKERHUB_CREDENTIALS_USR} \
+            --docker-password=${DOCKERHUB_CREDENTIALS_PSW} \
+            --docker-email=hj.ahmed.hosny@gmail.com
+            set -a
+            source .env
+            set +a
+            envsubst < kubernates/deployment-template.yaml > kubernates/deployment.yaml
+            k apply -f kubernates/deployment.yaml
+
+            '''
+          
+        }
       }
     }
+    
+    // stage('Deploy') {
+    //   steps {
+    //     // Deploy using a production Docker Compose file
+    //     sh 'docker compose up -d'
+    //   }
+    // }
 
     stage('build aws infrastructure'){
       steps{
@@ -137,3 +164,4 @@ pipeline {
     }
   }
 }
+
