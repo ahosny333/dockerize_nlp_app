@@ -38,17 +38,7 @@ pipeline {
       }
     }
     
-    stage('Push to Docker Hub') {
-      steps {
-        script {
-          // Log in to Docker Hub using Jenkins credentials
-          sh "docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW}"
-          // Tag the image for latest and build-specific version
-          // sh "docker tag ${MY_IMAGE_NAME}:${BUILD_TAG} ${MY_IMAGE_NAME}:latest"
-          sh "docker push ${MY_IMAGE_NAME}:${BUILD_TAG}"
-        }
-      }
-    }
+   
 
     stage('test kubernetes') {
       steps {

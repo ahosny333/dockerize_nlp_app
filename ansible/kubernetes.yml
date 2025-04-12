@@ -2,9 +2,11 @@
 - name: Install Docker and Docker Compose
   hosts: local
   become: yes
-  become_user: ahmed
+  #become_user: ahmed
   tasks:
     - name: test minikube run
+      become: yes
+      become_user: ahmed
       shell: |
         minikube kubectl -- get pods
 
@@ -14,3 +16,5 @@
         source .env
         set +a
         envsubst < ../kubernates/deployment-template.yaml > ../kubernates/deployment.yaml
+      args:
+        executable: /bin/bash
