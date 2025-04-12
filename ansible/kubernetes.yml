@@ -1,0 +1,16 @@
+---
+- name: Install Docker and Docker Compose
+  hosts: local
+  become: yes
+  become_user: ahmed
+  tasks:
+    - name: test minikube run
+      shell: |
+        minikube kubectl -- get pods
+
+    - name: Generate deployment.yaml using envsubst
+      shell: |
+        set -a
+        source .env
+        set +a
+        envsubst < ../kubernates/deployment-template.yaml > ../kubernates/deployment.yaml

@@ -50,99 +50,115 @@ pipeline {
       }
     }
 
-    stage('deploy using kubeneates') {
+    stage('test kubernetes') {
       steps {
         script {
-            sh '''
-            chmod u+w .env 
-            echo "BUILD_TAG=${BUILD_TAG}" >> .env
-            echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
-            minikube start
-            alias k="minikube kubectl --"
-            k create secret generic my-secret --from-env-file=.env
-            k apply -f kubernates/db-deployment.yml
-            k create secret docker-registry my-dockerhub-secret \
-            --docker-username=${DOCKERHUB_CREDENTIALS_USR} \
-            --docker-password=${DOCKERHUB_CREDENTIALS_PSW} \
-            --docker-email=hj.ahmed.hosny@gmail.com
-            set -a
-            source .env
-            set +a
-            envsubst < kubernates/deployment-template.yaml > kubernates/deployment.yaml
-            k apply -f kubernates/deployment.yaml
-
-            '''
-          
+          // Log in to Docker Hub using Jenkins credentials
+          sh '''
+                chmod u+w .env 
+                echo "BUILD_TAG=${BUILD_TAG}" >> .env
+                echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
+          '''
+          sh "ansible-playbook -i local_inventory ansible/kubernetes.yml"
+          // Tag the image for latest and build-specific version
+          // sh "docker tag ${MY_IMAGE_NAME}:${BUILD_TAG} ${MY_IMAGE_NAME}:latest"
         }
       }
     }
-    
-    // stage('Deploy') {
+
+    // stage('deploy using kubeneates') {
     //   steps {
-    //     // Deploy using a production Docker Compose file
-    //     sh 'docker compose up -d'
+    //     script {
+    //         sh '''
+    //         chmod u+w .env 
+    //         echo "BUILD_TAG=${BUILD_TAG}" >> .env
+    //         echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
+    //         minikube start
+    //         alias k="minikube kubectl --"
+    //         k create secret generic my-secret --from-env-file=.env
+    //         k apply -f kubernates/db-deployment.yml
+    //         k create secret docker-registry my-dockerhub-secret \
+    //         --docker-username=${DOCKERHUB_CREDENTIALS_USR} \
+    //         --docker-password=${DOCKERHUB_CREDENTIALS_PSW} \
+    //         --docker-email=hj.ahmed.hosny@gmail.com
+    //         set -a
+    //         source .env
+    //         set +a
+    //         envsubst < kubernates/deployment-template.yaml > kubernates/deployment.yaml
+    //         k apply -f kubernates/deployment.yaml
+
+    //         '''
+          
+    //     }
     //   }
     // }
+    
+    // // stage('Deploy') {
+    // //   steps {
+    // //     // Deploy using a production Docker Compose file
+    // //     sh 'docker compose up -d'
+    // //   }
+    // // }
 
-    stage('build aws infrastructure'){
-      steps{
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                  credentialsId: 'myaws',
-                                  accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                                  secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                    // Deploy or update CloudFormation stack using AWS CLI
-                    sh """
-                      aws cloudformation deploy --template-file aws_infrastructure/network.yml --stack-name "nlp-network" \
-                        --parameter-overrides EnvironmentName=${aws_EnvironmentName} WorkflowID="12345678" \
-                        --tags project=${aws_project}
+    // stage('build aws infrastructure'){
+    //   steps{
+    //     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+    //                               credentialsId: 'myaws',
+    //                               accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+    //                               secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+    //                 // Deploy or update CloudFormation stack using AWS CLI
+    //                 sh """
+    //                   aws cloudformation deploy --template-file aws_infrastructure/network.yml --stack-name "nlp-network" \
+    //                     --parameter-overrides EnvironmentName=${aws_EnvironmentName} WorkflowID="12345678" \
+    //                     --tags project=${aws_project}
 
-                      aws cloudformation deploy --template-file aws_infrastructure/servers.yml --stack-name "nlp-server" \
-                        --parameter-overrides EnvironmentName=${aws_EnvironmentName} id="12345678" \
-                         --tags project=${aws_project}
+    //                   aws cloudformation deploy --template-file aws_infrastructure/servers.yml --stack-name "nlp-server" \
+    //                     --parameter-overrides EnvironmentName=${aws_EnvironmentName} id="12345678" \
+    //                      --tags project=${aws_project}
                          
-                    aws cloudformation list-exports --query "Exports[?Name==\\`WorkflowID\\`].Value" --no-paginate --output text
-                    """
+    //                 aws cloudformation list-exports --query "Exports[?Name==\\`WorkflowID\\`].Value" --no-paginate --output text
+    //                 """
 
                     
-        }
-      }
-    }
+    //     }
+    //   }
+    // }
     
-    stage('Configure EC2 with Ansible') {
-      steps {
-        // Use Jenkins credentials for your SSH key
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                  credentialsId: 'myaws',
-                                  accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                                  secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],sshUserPrivateKey(credentialsId: 'ec2_ssh', keyFileVariable: 'SSH_KEY')]) {
-          // Create the inventory file using a shell script without needing extra Groovy code
-          sh '''
-            INSTANCE_IP=$(aws ec2 describe-instances \
-              --query "Reservations[*].Instances[*].PublicIpAddress" \
-              --filters "Name=tag:Name,Values=elgris-12345678" \
-              --output text)
-            # Optionally add remote host key to known_hosts
-            ssh-keyscan -H ${INSTANCE_IP} >> ~/.ssh/known_hosts
-            echo "[ec2]" > inventory
-            echo "${INSTANCE_IP} ansible_user=ubuntu" >> inventory
-            cat inventory
-          '''
-          // update .env file including all required parameters 
-          sh '''
-            chmod u+w .env 
-            echo "BUILD_TAG=${BUILD_TAG}" >> .env
-            tar -czvf project.tar.gz migrations templates Dockerfile app.py docker-compose.yml extensions.py models.py requirements.txt .env
+    // stage('Configure EC2 with Ansible') {
+    //   steps {
+    //     // Use Jenkins credentials for your SSH key
+    //     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+    //                               credentialsId: 'myaws',
+    //                               accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+    //                               secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],sshUserPrivateKey(credentialsId: 'ec2_ssh', keyFileVariable: 'SSH_KEY')]) {
+    //       // Create the inventory file using a shell script without needing extra Groovy code
+    //       sh '''
+    //         INSTANCE_IP=$(aws ec2 describe-instances \
+    //           --query "Reservations[*].Instances[*].PublicIpAddress" \
+    //           --filters "Name=tag:Name,Values=elgris-12345678" \
+    //           --output text)
+    //         # Optionally add remote host key to known_hosts
+    //         ssh-keyscan -H ${INSTANCE_IP} >> ~/.ssh/known_hosts
+    //         echo "[ec2]" > inventory
+    //         echo "${INSTANCE_IP} ansible_user=ubuntu" >> inventory
+    //         cat inventory
+    //       '''
+    //       // update .env file including all required parameters 
+    //       sh '''
+    //         chmod u+w .env 
+    //         echo "BUILD_TAG=${BUILD_TAG}" >> .env
+    //         tar -czvf project.tar.gz migrations templates Dockerfile app.py docker-compose.yml extensions.py models.py requirements.txt .env
             
-          '''
-          // Run the Ansible playbook using the generated inventory file and the SSH key
-          sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY}"
+    //       '''
+    //       // Run the Ansible playbook using the generated inventory file and the SSH key
+    //       sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY}"
 
-          // OR Run the Ansible playbook, disabling strict host key checking -- not used as i used add remote host key to known_hosts
-          // sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
+    //       // OR Run the Ansible playbook, disabling strict host key checking -- not used as i used add remote host key to known_hosts
+    //       // sh "ansible-playbook -i inventory ansible/playbook.yml --private-key ${SSH_KEY} --ssh-extra-args '-o StrictHostKeyChecking=no'"
            
-        }
-      }
-    }
+    //     }
+    //   }
+    // }
 
 
 
@@ -164,4 +180,3 @@ pipeline {
     }
   }
 }
-
