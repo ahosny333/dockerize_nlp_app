@@ -1,7 +1,7 @@
 ---
 - name: Install Docker and Docker Compose
   hosts: local
-  become: yes
+  #become: yes
   #become_user: ahmed
   tasks:
     - name: test minikube run
