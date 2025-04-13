@@ -38,9 +38,19 @@ pipeline {
       }
     }
     
-   
-
-    stage('test kubernetes') {
+    stage('Push to Docker Hub') {
+      steps {
+        script {
+          // Log in to Docker Hub using Jenkins credentials
+          sh "docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW}"
+          // Tag the image for latest and build-specific version
+          // sh "docker tag ${MY_IMAGE_NAME}:${BUILD_TAG} ${MY_IMAGE_NAME}:latest"
+          sh "docker push ${MY_IMAGE_NAME}:${BUILD_TAG}"
+        }
+      }
+    }
+    
+    stage('deploy using ansible and kubernetes') { 
       steps {
         script {
           // Log in to Docker Hub using Jenkins credentials
@@ -48,7 +58,7 @@ pipeline {
                 chmod u+w .env 
                 echo "BUILD_TAG=${BUILD_TAG}" >> .env
                 echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
-                echo "test_image=${BUILD_TAG}" >> .env
+                
           '''
           sh "ansible-playbook -i local_inventory ansible/kubernetes.yml"
           // Tag the image for latest and build-specific version
@@ -84,12 +94,12 @@ pipeline {
     //   }
     // }
     
-    // // stage('Deploy') {
-    // //   steps {
-    // //     // Deploy using a production Docker Compose file
-    // //     sh 'docker compose up -d'
-    // //   }
-    // // }
+    // stage('Deploy') {
+    //   steps {
+    //     // Deploy using a production Docker Compose file
+    //     sh 'docker compose up -d'
+    //   }
+    // }
 
     // stage('build aws infrastructure'){
     //   steps{
@@ -136,8 +146,8 @@ pipeline {
     //       '''
     //       // update .env file including all required parameters 
     //       sh '''
-    //         chmod u+w .env 
-    //         echo "BUILD_TAG=${BUILD_TAG}" >> .env
+    //         # chmod u+w .env 
+    //         # echo "BUILD_TAG=${BUILD_TAG}" >> .env
     //         tar -czvf project.tar.gz migrations templates Dockerfile app.py docker-compose.yml extensions.py models.py requirements.txt .env
             
     //       '''
