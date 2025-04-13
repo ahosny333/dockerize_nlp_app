@@ -1,5 +1,5 @@
 ---
-- name: Install Docker and Docker Compose
+- name: apply kubernetes deployments 
   hosts: local
   #become: yes
   #become_user: ahmed
@@ -18,3 +18,24 @@
         envsubst < ../kubernates/deployment-template.yaml > ../kubernates/deployment.yaml
       args:
         executable: /bin/bash
+
+    - name: create secret from .env file
+      become: yes
+      become_user: ahmed
+      shell: |
+        minikube kubectl -- create secret generic my-secret --from-env-file=.env
+
+    - name: create deployment for postgress db
+      become: yes
+      become_user: ahmed
+      shell: |
+        minikube kubectl -- apply -f ../kubernates/db-deployment.yaml
+
+    # - name: create secret for docker hub registry
+    #   become: yes
+    #   become_user: ahmed
+    #   shell: |
+    #     minikube kubectl -- apply -f ../kubernates/db-deployment.yaml
+        
+
+
