@@ -35,11 +35,16 @@
       debug:
         msg: "App is {{ user_name }}"
 
-    # - name: create secret for docker hub registry
-    #   become: yes
-    #   become_user: ahmed
-    #   shell: |
-    #     minikube kubectl -- apply -f ../kubernates/db-deployment.yaml
-        
+    - name: create secret for docker hub registry
+      become: yes
+      become_user: ahmed
+      shell: |
+        minikube kubectl -- create secret docker-registry my-dockerhub-secret --docker-username={{ user_name }} --docker-password={{ pw }} --docker-email=hj.ahmed.hosny@gmail.com
+
+    - name: create deployment for flask app
+      become: yes
+      become_user: ahmed
+      shell: |
+        minikube kubectl -- apply -f ../kubernates/deployment.yaml
 
 
