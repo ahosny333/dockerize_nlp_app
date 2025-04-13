@@ -55,7 +55,7 @@ pipeline {
         script {
           // Log in to Docker Hub using Jenkins credentials
           sh '''
-                chmod u+w .env 
+                chmod a+rwx .env 
                 echo "BUILD_TAG=${BUILD_TAG}" >> .env
                 echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
                 
