@@ -23,13 +23,17 @@
       become: yes
       become_user: ahmed
       shell: |
-        minikube kubectl -- create secret generic my-secret --from-env-file=.env
+        minikube kubectl -- create secret generic my-secret --from-env-file=../.env
 
     - name: create deployment for postgress db
       become: yes
       become_user: ahmed
       shell: |
         minikube kubectl -- apply -f ../kubernates/db-deployment.yaml
+
+    - name: Show user name
+      debug:
+        msg: "App is {{ user_name }}"
 
     # - name: create secret for docker hub registry
     #   become: yes

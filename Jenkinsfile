@@ -60,7 +60,7 @@ pipeline {
                 echo "docker_user=${DOCKERHUB_CREDENTIALS_USR}" >> .env
                 
           '''
-          sh "ansible-playbook -i local_inventory ansible/kubernetes.yml"
+          sh "ansible-playbook -i local_inventory ansible/kubernetes.yml -e "user_name=${DOCKERHUB_CREDENTIALS_USR}"
           // Tag the image for latest and build-specific version
           // sh "docker tag ${MY_IMAGE_NAME}:${BUILD_TAG} ${MY_IMAGE_NAME}:latest"
         }
