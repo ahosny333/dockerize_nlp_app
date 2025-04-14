@@ -17,10 +17,12 @@
       community.docker.docker_compose_v2:
         project_src: /home/ubuntu/
         state: absent
+        docker_cli: /usr/bin/docker
 
     - name: Create and start services
       community.docker.docker_compose_v2:
         project_src: /home/ubuntu/
+        docker_cli: /usr/bin/docker
       register: output
 
     - name: Verify that web and db services are running
