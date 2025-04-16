@@ -1,6 +1,6 @@
-# Simplifying and Dockerizing an NLP Application with DevOps tools
+# DEPI DevOps Graduation Project : Simplifying and Dockerizing an NLP Application with DevOps tools
 
-This project is a Flask web application that enables users to register, log in, and perform sentiment analysis on an article URL using the Hugging Face Inference API. The application is built with a focus on simplifying and automating the deployment process using modern DevOps tools and practices.
+This project is a Flask web application that enables users to register, log in, and perform sentiment analysis on an article URL using the Hugging Face Inference API. The application is built with a focus on simplifying and full automating the complete deployment process using modern DevOps tools and practices.
 
 ---
 
@@ -42,11 +42,22 @@ The goal is to simplify the deployment process and to dockerize the NLP applicat
   - The application is split into two main Docker containers:
     - Flask application container.
     - PostgreSQL database container.
+
+- **Containers Orchestration using Kubernetes:**  
+  - the applicaion is deployed locally through minikube cluster containing:
+    - PostgreSQL deployment and with ClusterIP service.
+    - Flask APP deployment with LoadBalancer service
+    - Secret containing DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD to pull the created image of the application
+    - Secret containg application environment variables and credentials for applicaion and PostgreSQL 
     
-- **CI/CD Pipeline:**  
-  - Automated building, testing, and deployment through Jenkins.
+- **CI/CD Pipeline using Jenkins:**  
+  - Full automate building, testing, and deployment through Jenkins.
   - Docker image building and publishing to Docker Hub.
   - Deployment automation using Ansible, Kubernetes, and AWS CloudFormation.
+
+- **IAC using AWS cloudformation:**  
+  - Provision AWS infrastructure using AWS CloudFormation (VPC, public network, Internet Gateway, routing table, EC2, security groups).
+
 
 ---
 
@@ -138,10 +149,11 @@ The pipeline is configured in Jenkins and includes the following stages:
 
 - Docker and Docker Compose installed
 - Python 3.x installed
-- PostgreSQL server (or use Docker container)
+- PostgreSQL server (or we already use Docker container)
 - Jenkins for CI/CD pipeline
 - Ansible installed for deployment automation
 - AWS CLI (if deploying to AWS)
+- minikube for locally created containers Orchestration 
 
 ### Local Setup
 
@@ -164,7 +176,21 @@ Create a .env file in the project root with the following variables:
    AWS_ACCESS_KEY_ID=your_aws_access_key
    AWS_SECRET_ACCESS_KEY=your_aws_secret_key
    ```
-3. **Run the CI/CD pipeline in Jenkins**:
+
+3. **Set up the AWS CLI with AWS account credentials:**
+
+   ```bash
+   aws configure 
+   # set the AWS Access key ID,Secret access key
+   ```
+
+3. **Start Minikube cluster:**
+
+   ```bash
+   minikube start
+   ```
+
+4. **Run the CI/CD pipeline in Jenkins**:
 After complete successful run for pipeline in jenkins the application will be deployed locally at host machine and remotely on remote AWS EC2
    - Access the application locally
 
